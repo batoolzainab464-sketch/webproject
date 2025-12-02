@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Post Your Property — Rent / Sell | Graana</title>
+<style>
+  body {
+    font-family: "Segoe UI", Roboto, sans-serif;
+    background: #f5f7fa;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+  }
+
+  .form-container {
+    background: #fff;
+    margin-top: 40px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px #280101;
+    width: 100%;
+    max-width: 600px;
+    padding: 24px 32px;
+  }
+
+  h2 { text-align: center; color: #dc3939; margin-bottom: 10px; }
+  p { text-align: center; color: #6b7280; margin-bottom: 25px; }
+
+  label { display: block; margin-bottom: 6px; font-weight: bold; color: hwb(353 19% 13%); }
+  input, select, textarea { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #d1d5db; margin-bottom: 16px; font-size: 14px; outline: none; }
+  textarea { resize: vertical; }
+
+  button {
+    width: 100%;
+    padding: 12px;
+    background: hwb(0 23% 10%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+
+  button:hover { background: #b72929; }
+
+  .submitCancel {
+    width: 100%; display: flex; justify-content: flex-end; gap: 8px;
+  }
+
+  .submitBTN { background: #00D100; color: white; }
+  .success { text-align: center; background: #ecfdf5; color: #cc4044; border-radius: 10px; padding: 12px; margin-top: 20px; display: none; }
+
+  .preview-container { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .preview-container img { width: 100px; height: 100px; object-fit: cover; border-radius: 10px; border: 2px solid #ddd; }
+
+  #uploadHint {
+    color: #555;
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+</style>
+</head>
+<body>
+
+<div class="form-container">
+  <h2>Post Your Property (Rent / Sell)</h2>
+  <p>Fill in the details below to list your property on our platform.</p>
+
+  <form id="plotForm">
+    <label>Property Name</label>
+    <input type="text" id="propertyName" placeholder="Enter property name" required>
+
+    <label>Plot Size (yards / marla)</label>
+    <input type="text" id="size" placeholder="e.g. 500 yards or 10 marla" required>
+
+    <label>Property Type</label>
+    <select id="type" required>
+      <option value="">Select Type</option>
+      <option value="Residential">Residential</option>
+      <option value="Commercial">Commercial</option>
+      <option value="Agricultural">Agricultural</option>
+    </select>
+
+    <label>Purpose</label>
+    <select id="purpose" required>
+      <option value="">Select Purpose</option>
+      <option value="Rent">Rent</option>
+      <option value="Sell">Sell</option>
+    </select>
+
+    <label>Price (PKR)</label>
+    <input type="number" id="price" placeholder="Example: 7500000" required>
+
+    <label>Property Address</label>
+    <input type="text" id="propertyAddress" placeholder="Enter Address" required>
+
+    <label>Property Location</label>
+    <select id="PropertyCity" required>
+      <option value="">Select city</option>
+      <option value="faisalabad">Faisalabad</option>
+      <option value="islamabad">Islamabad</option>
+      <option value="lahore">Lahore</option>
+      <option value="karachi">Karachi</option>
+      <option value="peshawar">Peshawar</option>
+    </select>
+
+    <label>Contact Number</label>
+    <input type="tel" id="phone" placeholder="0300-1234567" required>
+
+    <label>Additional Details</label>
+    <textarea id="details" rows="4" placeholder="Write about nearby facilities, etc."></textarea>
+
+    <!-- 📸 Image Upload Section -->
+    <label>Upload Property Images (max 5)</label>
+    <div id="uploadHint">Upload at least 1 image</div>
+    <input type="file" id="images" accept="image/*" multiple required>
+    <div class="preview-container" id="previewContainer"></div>
+
+    <div class="submitCancel">
+      <button id="cancelBtn" type="button">Cancel</button>
+      <button class="submitBTN" type="submit">Submit Listing</button>
+    </div>
+  </form>
+
+  <div class="success" id="successMsg">✅ Your property has been submitted successfully!</div>
+</div>
+
+<script>
+
+    document.addEventListener("DOMContentLoaded", () => {
+    const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+    if (!userData || !userData.email) {
+      // user is already logged in
+      window.location.href = "/signIn.html";
+      return;
+    }
+  });
+
+const form = document.getElementById('plotForm');
+const successMsg = document.getElementById('successMsg');
+const imageInput = document.getElementById('images');
+const previewContainer = document.getElementById('previewContainer');
+const uploadHint = document.getElementById('uploadHint');
+
+let selectedImages = [];
+
+// 🖼️ Handle image selection + preview with remove option
+imageInput.addEventListener("change", (e) => {
+  const files = Array.from(e.target.files);
+
+  if (files.length + selectedImages.length > 5) {
+    alert("You can upload a maximum of 5 images.");
+    return;
+  }
+
+  selectedImages = [...selectedImages, ...files];
+  renderImagePreviews();
+  updateUploadHint();
+});
+
+// 🔄 Function to render all selected images
+function renderImagePreviews() {
+  previewContainer.innerHTML = "";
+
+  selectedImages.forEach((file, index) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const imgWrapper = document.createElement("div");
+      imgWrapper.style.position = "relative";
+      imgWrapper.style.display = "inline-block";
+
+      const img = document.createElement("img");
+      img.src = event.target.result;
+
+      const removeBtn = document.createElement("button");
+      removeBtn.innerHTML = "×";
+      removeBtn.title = "Remove image";
+      removeBtn.style.position = "absolute";
+      removeBtn.style.top = "-6px";
+      removeBtn.style.right = "-6px";
+      removeBtn.style.width = "22px";
+      removeBtn.style.height = "22px";
+      removeBtn.style.borderRadius = "50%";
+      removeBtn.style.border = "none";
+      removeBtn.style.background = "#ff4d4d";
+      removeBtn.style.color = "white";
+      removeBtn.style.cursor = "pointer";
+      removeBtn.style.fontWeight = "bold";
+      removeBtn.style.lineHeight = "18px";
+
+      removeBtn.addEventListener("click", () => {
+        selectedImages.splice(index, 1);
+        renderImagePreviews();
+        updateUploadHint();
+      });
+
+      imgWrapper.appendChild(img);
+      imgWrapper.appendChild(removeBtn);
+      previewContainer.appendChild(imgWrapper);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// Update upload hint dynamically
+function updateUploadHint() {
+  if (selectedImages.length === 0) {
+    uploadHint.textContent = "Upload at least 1 image";
+  } else if (selectedImages.length < 5) {
+    uploadHint.textContent = `You can upload ${5 - selectedImages.length} more image(s) from "Choose Files" button`;
+  } else {
+    uploadHint.textContent = "Maximum images uploaded";
+  }
+}
+
+// 📤 Handle form submission
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (selectedImages.length === 0) {
+    alert('Please upload at least one image.');
+    return;
+  }
+
+  const propertyData = {
+    propertyName: document.getElementById('propertyName').value.trim(),
+    size: document.getElementById('size').value.trim(),
+    type: document.getElementById('type').value,
+    purpose: document.getElementById('purpose').value,
+    price: document.getElementById('price').value,
+    propertyAddress: document.getElementById('propertyAddress').value.trim(),
+    city: document.getElementById('PropertyCity').value,
+    phone: document.getElementById('phone').value.trim(),
+    details: document.getElementById('details').value.trim(),
+  };
+
+  // Compress + convert images
+  const imageArray = [];
+  for (const file of selectedImages) {
+    const compressedBase64 = await toCompressedBase64(file, 800, 0.6);
+    imageArray.push({ picName: file.name, urlPath: compressedBase64 });
+  }
+
+  const fullData = { ...propertyData, images: imageArray, addedAt: new Date() };
+  let allListings = JSON.parse(localStorage.getItem('propertyListings')) || [];
+  allListings.push(fullData);
+  localStorage.setItem('propertyListings', JSON.stringify(allListings));
+
+
+  successMsg.style.display = 'block';
+  form.reset();
+  previewContainer.innerHTML = '';
+  selectedImages = [];
+  updateUploadHint();
+
+  setTimeout(() => { 
+    successMsg.style.display = 'none'; 
+    window.location.href = "/buy.html";
+  }, 4000);
+});
+
+// Compress + convert image to Base64
+function toCompressedBase64(file, maxWidth = 800, quality = 0.7) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        let width = img.width, height = img.height;
+        if (width > maxWidth) { height *= maxWidth / width; width = maxWidth; }
+        canvas.width = width; canvas.height = height;
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.onerror = err => reject(err);
+    };
+    reader.onerror = error => reject(error);
+    reader.readAsDataURL(file);
+  });
+}
+
+// ❌ Cancel button
+document.getElementById('cancelBtn').addEventListener('click', () => {
+  form.reset();
+  previewContainer.innerHTML = '';
+  selectedImages = [];
+  updateUploadHint();
+});
+</script>
+</body>
+</html>

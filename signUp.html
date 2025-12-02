@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign Up | Graana</title>
+
+  <style>
+    body {
+      font-family: "Segoe UI", Roboto, sans-serif;
+      background: #f5f7fa;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+
+    .form-container {
+      background: #fff;
+      margin-top: 40px;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px #280101;
+      width: 100%;
+      max-width: 500px;
+      padding: 24px 32px;
+    }
+
+    h2 {
+      text-align: center;
+      color: #dc3939;
+      margin-bottom: 10px;
+    }
+
+    p {
+      text-align: center;
+      color: #6b7280;
+      margin-bottom: 25px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: bold;
+      color: hwb(353 19% 13%);
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid #d1d5db;
+      margin-bottom: 6px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: #dc3939;
+      box-shadow: 0 0 0 3px rgba(220, 57, 57, 0.2);
+    }
+
+    .error {
+      color: #e63946;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: hwb(0 23% 10%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background: #b72929;
+    }
+
+    .success {
+      text-align: center;
+      background: #ecfdf5;
+      color: #cc4044;
+      border-radius: 10px;
+      padding: 12px;
+      margin-top: 20px;
+      display: none;
+    }
+
+    @media (max-width: 600px) {
+      .form-container {
+        margin: 20px;
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="form-container">
+    <h2>Create Your Account</h2>
+    <p>Sign up to start exploring properties.</p>
+
+    <form id="signupForm" novalidate>
+      <label for="firstName">First Name</label>
+      <input type="text" id="firstName" placeholder="Enter your first name" />
+      <div class="error" id="firstNameError"></div>
+
+      <label for="lastName">Last Name</label>
+      <input type="text" id="lastName" placeholder="Enter your last name" />
+      <div class="error" id="lastNameError"></div>
+
+      <label for="email">Email Address</label>
+      <input type="email" id="email" placeholder="Enter your email" />
+      <div class="error" id="emailError"></div>
+
+      <label for="role">Role</label>
+      <select id="role">
+        <option value="">Select Role</option>
+        <option value="buyer">Buyer</option>
+        <option value="agent">Agent</option>
+      </select>
+      <div class="error" id="roleError"></div>
+
+      <label for="password">Password</label>
+      <input type="password" id="password" placeholder="Enter your password" />
+      <div class="error" id="passwordError"></div>
+
+      <button type="submit">Sign Up</button>
+    </form>
+
+    <div class="success" id="successMsg">✅ Account created successfully!</div>
+  </div>
+
+  <script>
+
+          // ✅ Redirect if already logged in
+  document.addEventListener("DOMContentLoaded", () => {
+    const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+    if (userData && userData.email) {
+      // user is already logged in
+      window.location.href = "/index.html";
+      return;
+    }
+  });
+  
+    const form = document.getElementById("signupForm");
+    const successMsg = document.getElementById("successMsg");
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      // Clear previous errors
+      document.querySelectorAll(".error").forEach((el) => (el.textContent = ""));
+
+      const firstName = document.getElementById("firstName").value.trim();
+      const lastName = document.getElementById("lastName").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const role = document.getElementById("role").value;
+      const password = document.getElementById("password").value;
+
+      let isValid = true;
+
+      // Field validations
+      if (!firstName) {
+        document.getElementById("firstNameError").textContent =
+          "First name is required.";
+        isValid = false;
+      }
+
+      if (!lastName) {
+        document.getElementById("lastNameError").textContent =
+          "Last name is required.";
+        isValid = false;
+      }
+
+      if (!email) {
+        document.getElementById("emailError").textContent = "Email is required.";
+        isValid = false;
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        document.getElementById("emailError").textContent =
+          "Enter a valid email address.";
+        isValid = false;
+      }
+
+      if (!role) {
+        document.getElementById("roleError").textContent = "Please select a role.";
+        isValid = false;
+      }
+
+      // Password validation
+      const passwordRegex =
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,}$/;
+
+      if (!password) {
+        document.getElementById("passwordError").textContent =
+          "Password is required.";
+        isValid = false;
+      } else if (!passwordRegex.test(password)) {
+        document.getElementById("passwordError").textContent =
+          "Password must be at least 8 characters long, include one uppercase, one lowercase, and one special character. !@#$%^&*()_+-={}[]:;'<>,.?/\|~";
+        isValid = false;
+      }
+
+      if (!isValid) return;
+
+      // If all validations pass
+      const userData = {
+        firstName,
+        lastName,
+        email,
+        role,
+        password,
+      };
+
+      
+      localStorage.setItem("userData", JSON.stringify(userData));
+
+      successMsg.style.display = "block";
+      form.reset();
+
+      setTimeout(() => {
+        window.location.href = "/index.html";
+      }, 1000);
+    });
+  </script>
+
+</body>
+</html>
